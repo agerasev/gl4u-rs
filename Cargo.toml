@@ -1,0 +1,6 @@
+[package]
+name = "gl4u"
+version = "0.1.0"
+authors = ["Alexey Gerasev <alexey.gerasev@gmail.com>"]
+
+[dependencies]
