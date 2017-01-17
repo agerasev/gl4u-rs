@@ -1,3 +1,3 @@
 pub extern crate gl;
 
-mod shader;
+pub mod shader;
