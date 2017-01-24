@@ -77,6 +77,7 @@ impl Pass {
 		match self.get_attribute_location(name) {
 			Ok(id) => {
 				unsafe {
+					self.attribs.push_back(id);
 					gl::EnableVertexAttribArray(id as GLuint);
 					buffer.bind();
 					gl::VertexAttribPointer(id as GLuint, buffer.dim, gl::FLOAT, gl::FALSE, 0, ptr::null());
@@ -88,6 +89,7 @@ impl Pass {
 		}
 	}
 
+	#[allow(unused_mut)]
 	pub fn draw(mut self, first: i32, count: i32) -> Result<(), String> {
 		unsafe {
 			gl::DrawArrays(gl::TRIANGLES, first, count);
