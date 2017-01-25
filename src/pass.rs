@@ -7,15 +7,23 @@ use gl::types::*;
 
 use buffer::Buffer;
 
+pub enum Prim {
+	Triangles,
+	Quads
+}
+
 pub struct Pass {
 	pub id: GLuint,
 	pub attribs: LinkedList<GLint>,
+	pub first: i32,
+	pub count: i32,
+	pub prim: Prim,
 }
 
 impl Pass {
 	pub fn new(id: GLuint) -> Pass {
 		unsafe { gl::UseProgram(id); }
-		Pass { id: id, attribs: LinkedList::<GLint>::new() }
+		Pass { id: id, attribs: LinkedList::<GLint>::new(), first: 0, count: 0, prim: Prim::Triangles }
 	}
 
 	fn get_uniform_location(&self, name: &str) -> Result<GLint, String> {
@@ -89,10 +97,25 @@ impl Pass {
 		}
 	}
 
+	pub fn range(mut self, first: i32, count: i32) -> Self {
+		self.first = first;
+		self.count = count;
+		self
+	}
+
+	pub fn primitive(mut self, prim: Prim) -> Self {
+		self.prim = prim;
+		self
+	}
+
 	#[allow(unused_mut)]
-	pub fn draw(mut self, first: i32, count: i32) -> Result<(), String> {
+	pub fn draw(mut self) -> Result<(), String> {
 		unsafe {
-			gl::DrawArrays(gl::TRIANGLES, first, count);
+			let glprim = match self.prim {
+				Prim::Triangles => gl::TRIANGLES,
+				Prim::Quads => gl::QUADS,
+			};
+			gl::DrawArrays(glprim, self.first, self.count);
 
 			for id in self.attribs {
 				gl::DisableVertexAttribArray(id as GLuint);
