@@ -95,7 +95,7 @@ impl ShaderLoaded {
 			let mut len = 0;
 			gl::GetShaderiv(id, gl::INFO_LOG_LENGTH, &mut len);
 
-			let log = if len > 0 {
+			let log = if len > 1 {
 				let mut buf = Vec::<u8>::new();
 				buf.resize((len-1) as usize, 0);
 				gl::GetShaderInfoLog(id, len, ptr::null_mut(), buf.as_mut_ptr() as *mut GLchar);
