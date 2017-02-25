@@ -1,11 +1,13 @@
 extern crate gl;
 
 use std::{ffi, ptr};
-use std::error::{Error};
+use std::error::Error as StdError;
 use std::io::{Read};
 use std::fs::{File};
 
 use gl::types::*;
+
+use error::Error;
 
 pub enum Type {
 	Vertex,
@@ -68,7 +70,7 @@ impl ShaderNew {
 		ShaderLoaded { raw: self.raw }
 	}
 
-	pub fn load_file(mut self, filename: &str) -> Result<ShaderLoaded, String> {
+	pub fn load_file(mut self, filename: &str) -> Result<ShaderLoaded, Error> {
 		match File::open(filename) {
 			Ok(f) => {
 				self.raw.name = String::from(filename);
@@ -77,14 +79,14 @@ impl ShaderNew {
 				file.read_to_string(&mut content).unwrap();
 				Ok(self.load_str(content.as_str()))
 			},
-			Err(e) => Err(String::new() + filename + ": " + e.description())
+			Err(e) => Err(Error::new(String::new() + filename + ": " + e.description()))
 		}
 	}
 }
 
 impl ShaderLoaded {
 	#[allow(unused_mut)]
-	pub fn compile(mut self) -> Result<(ShaderCompiled, String), String> {
+	pub fn compile(mut self) -> Result<(ShaderCompiled, String), (Error, String)> {
 		unsafe {
 			let id = self.raw.id;
 			gl::CompileShader(id);
@@ -105,7 +107,7 @@ impl ShaderLoaded {
 			};
 
 			if status != (gl::TRUE as GLint) {
-				Err(log)
+				Err((Error::new("Error compile shader `".to_string() + &self.raw.name + "`"), log))
 			} else {
 				Ok((ShaderCompiled { raw: self.raw }, log))
 			}

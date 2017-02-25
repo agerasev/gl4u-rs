@@ -6,6 +6,7 @@ use std::collections::{LinkedList};
 use gl::types::*;
 
 use buffer::Buffer;
+use error::Error;
 
 pub enum Prim {
 	Triangles,
@@ -26,17 +27,17 @@ impl Pass {
 		Pass { id: id, attribs: LinkedList::<GLint>::new(), first: 0, count: 0, prim: Prim::Triangles }
 	}
 
-	fn get_uniform_location(&self, name: &str) -> Result<GLint, String> {
+	fn get_uniform_location(&self, name: &str) -> Result<GLint, Error> {
 		let id = unsafe { gl::GetUniformLocation(self.id, ffi::CString::new(name.as_bytes()).unwrap().as_ptr()) };
-		if id != -1 { Ok(id) } else { Err(String::new() + "uniform '" + name + "' location error") }
+		if id != -1 { Ok(id) } else { Err(Error::new(String::new() + "uniform '" + name + "' location error")) }
 	}
 
-	fn get_attribute_location(&self, name: &str) -> Result<GLint, String> {
+	fn get_attribute_location(&self, name: &str) -> Result<GLint, Error> {
 		let id = unsafe { gl::GetAttribLocation(self.id, ffi::CString::new(name.as_bytes()).unwrap().as_ptr()) };
-		if id != -1 { Ok(id) } else { Err(String::new() + "attribute '" + name + "' location error") }
+		if id != -1 { Ok(id) } else { Err(Error::new(String::new() + "attribute '" + name + "' location error")) }
 	}
 
-	pub fn uniform_scalar(self, name: &str, value: GLfloat) -> Result<Pass, String> {
+	pub fn uniform_scalar(self, name: &str, value: GLfloat) -> Result<Pass, Error> {
 		match self.get_uniform_location(name) {
 			Ok(id) => {
 				unsafe{ gl::Uniform1fv(id, 1, &value); }
@@ -46,7 +47,7 @@ impl Pass {
 		}
 	}
 
-	pub fn uniform_vector(self, name: &str, data: &[GLfloat]) -> Result<Pass, String> {
+	pub fn uniform_vector(self, name: &str, data: &[GLfloat]) -> Result<Pass, Error> {
 		match self.get_uniform_location(name) {
 			Ok(id) => {
 				unsafe {
@@ -55,7 +56,7 @@ impl Pass {
 						2 => { gl::Uniform2fv(id, 1, &data[0]); },
 						3 => { gl::Uniform3fv(id, 1, &data[0]); },
 						4 => { gl::Uniform4fv(id, 1, &data[0]); },
-						_ => { return Err(String::new() + "vector size is not between 1 and 4"); },
+						_ => { return Err(Error::new(String::new() + "vector size is not between 1 and 4")); },
 					}
 				}
 				Ok(self)
@@ -64,7 +65,7 @@ impl Pass {
 		}
 	}
 
-	pub fn uniform_matrix(self, name: &str, data: &[GLfloat]) -> Result<Pass, String> {
+	pub fn uniform_matrix(self, name: &str, data: &[GLfloat]) -> Result<Pass, Error> {
 		match self.get_uniform_location(name) {
 			Ok(id) => {
 				unsafe {
@@ -72,7 +73,7 @@ impl Pass {
 						4 => { gl::UniformMatrix2fv(id, 1, gl::TRUE, &data[0]); },
 						9 => { gl::UniformMatrix3fv(id, 1, gl::TRUE, &data[0]); },
 						16 => { gl::UniformMatrix4fv(id, 1, gl::TRUE, &data[0]); },
-						_ => { return Err(String::new() + "matrix size is not between 2 and 4"); },
+						_ => { return Err(Error::new(String::new() + "matrix size is not between 2 and 4")); },
 					}
 				}
 				Ok(self)
@@ -81,7 +82,7 @@ impl Pass {
 		}
 	}
 
-	pub fn attribute(mut self, name: &str, buffer: &Buffer) -> Result<Pass, String> {
+	pub fn attribute(mut self, name: &str, buffer: &Buffer) -> Result<Pass, Error> {
 		match self.get_attribute_location(name) {
 			Ok(id) => {
 				unsafe {
@@ -109,7 +110,7 @@ impl Pass {
 	}
 
 	#[allow(unused_mut)]
-	pub fn draw(mut self) -> Result<(), String> {
+	pub fn draw(mut self) -> Result<(), Error> {
 		unsafe {
 			let glprim = match self.prim {
 				Prim::Triangles => gl::TRIANGLES,

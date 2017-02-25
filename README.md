@@ -18,4 +18,4 @@
 - [ ] use Path instead of String for shader loading
 - [x] different types for different stages of Shader and Program initialization
 - [ ] refactor error message concatenation
-- [ ] use Error instead of String in result of methods
+- [x] use Error instead of String in result of methods

@@ -8,6 +8,7 @@ use gl::types::*;
 
 use shader::Shader;
 use pass::Pass;
+use error::Error;
 
 pub struct RawProgram {
 	pub id: GLuint,
@@ -51,7 +52,7 @@ impl ProgramLinked {
 		ProgramNew { raw: RawProgram::new() }
 	}
 
-	pub fn use_(&self) -> Result<Pass, String> {
+	pub fn use_(&self) -> Result<Pass, Error> {
 		Ok(Pass::new(self.id()))
 	}
 
@@ -80,7 +81,7 @@ impl ProgramNew {
 	}
 
 	#[allow(unused_mut)]
-	pub fn link(mut self) -> Result<ProgramLinked, String> {
+	pub fn link(mut self) -> Result<ProgramLinked, Error> {
 		unsafe {
 			let id = self.raw.id;
 			gl::LinkProgram(id);
@@ -95,9 +96,9 @@ impl ProgramNew {
 					let mut buf = Vec::<u8>::new();
 					buf.resize((len-1) as usize, 0);
 					gl::GetProgramInfoLog(id, len, ptr::null_mut(), buf.as_mut_ptr() as *mut GLchar);
-					Err(self.raw.name.clone() + ": " + String::from_utf8(buf).unwrap().as_str())
+					Err(Error::new(self.raw.name.clone() + ": " + String::from_utf8(buf).unwrap().as_str()))
 				} else {
-					Err(String::new())
+					Err(Error::new(String::new()))
 				}
 			} else {
 				Ok(ProgramLinked { raw: self.raw })
